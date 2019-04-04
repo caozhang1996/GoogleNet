@@ -29,25 +29,6 @@ keep_prob = tf.placeholder(dtype=tf.float32)
 is_training = tf.placeholder(dtype=tf.bool)
 
 
-def evaluation(sess, loss, accuracy, val_batch_images, val_batch_labels, val_nums):
-    val_max_steps = int(val_nums / batch_size)
-    val_losses = []
-    val_accs = []
-    for i in xrange(val_max_steps):
-        val_x, val_y = sess.run([val_batch_images, val_batch_labels])
-
-        val_loss, val_acc = sess.run([loss, accuracy], feed_dict={input_images: val_x,
-                                                                  input_labels: val_y,
-                                                                  keep_prob: 1.0,
-                                                                  is_training: False})
-        val_losses.append(val_loss)
-        val_accs.append(val_acc)
-
-    mean_loss = np.array(val_losses, dtype=np.float32).mean()
-    mean_acc = np.array(val_accs, dtype=np.float32).mean()
-    return mean_loss, mean_acc
-
-
 def train(train_tfrecords_file,
           base_lr,
           max_steps,
@@ -132,6 +113,11 @@ def train(train_tfrecords_file,
 
             # 在验证数据集上得到loss, accuracy值
             if steps % 200 == 0 or (steps + 1) == max_steps:
+                val_images_batch, val_labels_batch = sess.run([val_batch_images, val_batch_labels])
+                val_loss, val_acc = sess.run([loss, accuracy], feed_dict={input_images: val_images_batch,
+                                                                          input_labels: val_labels_batch,
+                                                                          keep_prob: 1.0,
+                                                                          is_training: False})
                 val_loss, val_acc = evaluation(sess, loss, accuracy, val_batch_images, val_batch_labels, val_nums)
                 print('**  Step %d, val loss = %.2f, val accuracy = %.2f%%  **' % (steps, val_loss, val_acc))
 
